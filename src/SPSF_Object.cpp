@@ -60,7 +60,12 @@ size_t SPSF_Item::getSize() const
 	return size;
 }
 
-const char* SPSF_Item::operator&() const
+const char* SPSF_Item::arr() const
+{
+	return data.get();
+}
+
+char* SPSF_Item::arr() 
 {
 	return data.get();
 }
@@ -82,12 +87,10 @@ SPSF_Lane::SPSF_Lane(ColorType ct, BitDepth bd, int16_t item_width, int16_t item
 	this->item_height = item_height;
 	this->n_Items = items.size();
 	this->items = items;
-	size_t data_size = ct * bd * item_width * item_height;
-	data_size = (data_size / 8) + (bool)(data_size % 8);
 
 	for (int i = 0;i <= n_Items - 1;i++)
 	{
-		this->items[i].size = data_size;
+		this->items[i].size = getItemSize();
 	}
 }
 
@@ -119,14 +122,19 @@ int32_t SPSF_Lane::getN_Items() const
 const std::vector<SPSF_Item>& SPSF_Lane::getItems() const
 {
 	return items;
+} 
+
+size_t SPSF_Lane::getItemSize() const
+{
+	size_t data_size = ct * bd * item_width * item_height;
+	data_size = (data_size / 8) + ((bool)(data_size % 8));
+	return data_size;
 }
-#include <iostream>
+
 size_t SPSF_Lane::getSize() const
 {
 	size_t s = (sizeof ct + sizeof bd + sizeof item_width + sizeof item_height + sizeof n_Items);
-	size_t data_size = ct * bd * item_width * item_height;
-	data_size = (data_size / 8) + ((bool)(data_size % 8));
-	return s + data_size;
+	return s + getItemSize();
 }
 
 SPSF_Object::SPSF_Object() : lanes()
@@ -139,7 +147,7 @@ SPSF_Object::SPSF_Object(std::vector<SPSF_Lane> &&lanes)
 {
 	this->n_Lanes = lanes.size();
 	this->lanes = lanes;
-	size_t total = sizeof SPSF_HEADER + +sizeof total_size + sizeof n_Lanes;
+	size_t total = sizeof SPSF_HEADER_ULONG + +sizeof total_size + sizeof n_Lanes;
 	for (int i = 0;i <= n_Lanes - 1;i++)
 	{
 		total += this->lanes[i].getSize();
@@ -168,7 +176,8 @@ std::ostream& SPSF::operator<<(std::ostream &out, const SPSF_Item &item)
 {
 	if (!out.good()) throw std::exception("SPSF: Stream state is not good!\n");
 
-	out.write(&item, item.getSize());
+	out.write(item.arr(), item.getSize());
+	out.flush();
 	return out;
 }
 
@@ -187,6 +196,7 @@ std::ostream& SPSF::operator<<(std::ostream &out, const SPSF_Lane &lane)
 	{
 		out << items[i];
 	}
+	out.flush();
 	return out;
 }
 
@@ -194,7 +204,7 @@ std::ostream& SPSF::operator<<(std::ostream &out, const SPSF_Object &spsf)
 {
 	if (!out.good()) throw std::exception("SPSF: Stream state is not good!\n");
 
-	out << SPSF_HEADER;
+	wr(SPSF_HEADER_ULONG);
 	wr(spsf.total_size);
 	wr(spsf.n_Lanes);
 
@@ -204,4 +214,58 @@ std::ostream& SPSF::operator<<(std::ostream &out, const SPSF_Object &spsf)
 		out << lanes[i];
 	}
 	return out;
+}
+
+#define rd(a) in.read((char*)&(a), sizeof a)
+
+#include <iostream>
+std::istream& SPSF::operator>>(std::istream &in, SPSF_Item &item)
+{
+	if (!in.good()) throw std::exception("SPSF: Stream state is not good!\n");
+	item.data = std::make_unique<char[]>(item.size);
+	std::cout << "Size of item " << item.size << std::endl;
+	in.read(item.arr(), item.size);
+	return in;
+}
+
+std::istream& SPSF::operator>>(std::istream& in, SPSF_Lane &lane)
+{
+	if (!in.good()) throw std::exception("SPSF: Stream state is not good!\n");
+
+	rd(lane.ct);
+	rd(lane.bd);
+	rd(lane.item_width);
+	rd(lane.item_height);
+	rd(lane.n_Items);
+
+	std::vector<SPSF_Item> &items = lane.items;
+	items.resize(lane.n_Items);
+
+	for (int i = 0;i <= lane.n_Items - 1;i++)
+	{
+		items[i].size = lane.getItemSize();
+		in >> items[i];
+	}
+	return in;
+}
+
+std::istream& SPSF::operator>>(std::istream& in, SPSF_Object &obj)
+{
+	if (!in.good()) throw std::exception("SPSF Stream state is not good!\n");
+
+	unsigned long long h = 0;
+	rd(h);
+	if (h != SPSF_HEADER_ULONG) throw std::exception("SPSF Header does not match. Are you sure the file is in the SPSF format?");
+
+	rd(obj.total_size);
+	rd(obj.n_Lanes);
+
+	std::vector<SPSF_Lane> &lanes = obj.lanes;
+	lanes.resize(obj.n_Lanes);
+	for (int i = 0;i <= obj.n_Lanes - 1;i++)
+	{
+		in >> obj.lanes[i];
+	}
+
+	return in;
 }

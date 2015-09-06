@@ -11,7 +11,8 @@
 namespace SPSF
 {
 
-	const char* SPSF_HEADER = "SPSFONTS";
+	const char* SPSF_HEADER_STRING = "SPSFONTS";
+	const unsigned long long SPSF_HEADER_ULONG = *reinterpret_cast<const unsigned long long*>(SPSF_HEADER_STRING);
 
 	enum ColorType : int8_t
 	{
@@ -38,6 +39,8 @@ namespace SPSF
 		friend class SPSF_Lane;
 
 		friend SPSF_API std::ostream& operator<<(std::ostream& out, const SPSF_Item &item);
+		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Item &item);
+		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
 	public:
 
 		SPSF_API SPSF_Item();
@@ -52,7 +55,8 @@ namespace SPSF
 
 		SPSF_API size_t getSize() const;
 
-		SPSF_API const char* operator&() const;
+		SPSF_API const char* arr() const;
+		SPSF_API char* arr();
 	};
 
 	class SPSF_Lane
@@ -67,6 +71,7 @@ namespace SPSF
 
 		std::vector<SPSF_Item> items;
 		friend SPSF_API std::ostream& operator<<(std::ostream& out, const SPSF_Lane &lane);
+		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
 
 	public:
 
@@ -87,6 +92,7 @@ namespace SPSF
 		SPSF_API int32_t getN_Items() const;
 		SPSF_API const std::vector<SPSF_Item>& getItems() const;
 
+		SPSF_API size_t getItemSize() const;
 		SPSF_API size_t getSize() const;
 	};
 
@@ -99,6 +105,7 @@ namespace SPSF
 		std::vector<SPSF_Lane> lanes;
 
 		friend SPSF_API std::ostream& operator<<(std::ostream& out, const SPSF_Object &obj);
+		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Object &obj);
 
 	public:
 
@@ -121,6 +128,10 @@ namespace SPSF
 	SPSF_API std::ostream& operator<<(std::ostream &out, const SPSF_Item &item);
 	SPSF_API std::ostream& operator<<(std::ostream &out, const SPSF_Lane &lane);
 	SPSF_API std::ostream& operator<<(std::ostream &out, const SPSF_Object &spsf);
+
+	SPSF_API std::istream& operator>>(std::istream &in, SPSF_Item &item);
+	SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
+	SPSF_API std::istream& operator>>(std::istream &in, SPSF_Object &obj);
 }
 
 #endif // SPSF_H
