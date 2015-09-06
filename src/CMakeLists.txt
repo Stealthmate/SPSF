@@ -1,13 +1,16 @@
 option(BUILD_SHARED_LIBS "Build the shared library" ON)
 set(LIBTYPE STATIC)
 if(BUILD_SHARED_LIBS)
-add_definitions(-DSPSF_SHARED)
+add_definitions(-DSPSF_BUILD_SHARED)
 set(LIBTYPE SHARED)
 endif()
 
 set(PRIVATE_HEADERS "")
 
-add_custom_target(Config SOURCES ${CURDIR}/*.hpp ${CURDIR}/*.cpp)
+FILE(GLOB SRCS ${CURDIR}/*.cpp ${CURDIR}/*.hpp)
+
+add_library(SPSF ${LIBTYPE} ${SRCS})
+set_target_properties(SPSF PROPERTIES COMPILE_DEFINITIONS SPSF_BUILD)
 
 set(CURDIR ${TEMP_DIR})
 file(GLOB_RECURSE PUBLIC_HEADERS ${CURDIR}/*.hpp)

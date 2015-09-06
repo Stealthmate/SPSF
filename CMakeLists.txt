@@ -28,42 +28,24 @@ link_directories("lib/" "bin/lib")
 set(REQUIRED_COMPILER_VERSION_GCC "4.7")
 set(REQUIRED_COMPILER_VERSION_MSVC "19.0")
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   # using Clang
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7.0")
 		set(CMAKE_CXX_FLAGS "-std=c++0x")
 	else()
 		SET( CMAKE_CXX_FLAGS  "-Wall -std=c++14" )
 	endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
   # using Intel C++
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${REQUIRED_COMPILER_VERSION_MSVC})
 		message( SEND_ERROR "Compiler version is lower than required (${REQUIRED_COMPILER_VERSION_MSVC})! Build may fail!")
 	endif()
 	SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /wd4251" )
 endif()
 
-#System dependencies
-#if (WIN32)
-#set(DEVA_FRAMEWORK_SYSTEM_DEP_OGL opengl32 glu32)
-#else()
-#set(DEVA_FRAMEWORK_SYSTEM_DEP_OGL GLU glbinding GL X11 Xxf86vm Xrandr pthread Xi Xinerama Xcursor)
-#endif()
-
-#Provided dependencies
-#set(DEVA_FRAMEWORK_PROV_DEP_GLBINDING glbinding)
-#set(DEVA_FRAMEWORK_PROV_DEP_GLFW glfw3)
-#set(DEVA_FRAMEWORK_PROV_DEP_LUA lua)
-#set(DEVA_FRAMEWORK_PROV_DEP_PNG libpng16)
-
-#All dependencies
-#set(DEVA_FRAMEWORK_DEP ${DEVA_SYSTEM_DEP_OGL} ${DEVA_PROV_DEP_PNG} ${DEVA_PROV_DEP_LUA})
-
-#set(SHADERS_OUTPUT_DIR bin/shaders)
-
-#Framework Sources
+#Sources
 set(CURDIR src)
 include(${CURDIR}/CMakeLists.txt)
 #Tests
