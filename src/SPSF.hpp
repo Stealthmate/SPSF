@@ -10,6 +10,7 @@
 
 namespace SPSF
 {
+
 }
 
 #endif // SPSF_H

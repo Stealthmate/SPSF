@@ -39,7 +39,18 @@ namespace SPSF
 		BD_8 = 8
 	};
 
-	typedef std::unique_ptr<char[]> owned_data;
+	template <typename T>
+	struct word
+	{
+		static constexpr int MAX_BITS = sizeof T * 8;
+		T* ptr = 0;
+		int used = 0;
+		int available = 0;
+	};
+
+	typedef uint8_t byte;
+	typedef uint32_t dword;
+	typedef std::unique_ptr<byte> owned_data;
 }
 
 #endif //SPSF_CONFIG_H

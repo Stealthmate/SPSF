@@ -49,8 +49,8 @@ namespace SPSF
 		SPSF_API int32_t getN_Elements() const;
 		SPSF_API size_t getSizeInBytes() const;
 
-		SPSF_API const char* getData() const;
-		SPSF_API char* getData();
+		SPSF_API const byte* getData() const;
+		SPSF_API byte* getData();
 
 	};
 
