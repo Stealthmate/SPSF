@@ -1,4 +1,5 @@
 #include "../src/SPSF.hpp"
+#include "../src/Packers.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -6,13 +7,13 @@ using namespace SPSF;
 std::string hex(unsigned char b);
 
 template <typename T>
-T* compressElement(int n_components, int bits_per_component_provided, int bits_per_component_new, T* data, T* new_data_buff = 0)
+T* compressElement(int n_components, int bits_per_component_provided, int bits_per_component_new, byte* data, byte* new_data_buff = 0)
 {
 	int new_size = std::ceil((n_components*  bits_per_component_new) / (double)word<T>::MAX_BITS);
-	T* new_data = new_data_buff;
+	T* new_data = reinterpret_cast<T*>(new_data_buff);
 	if (!new_data) new_data = new T[new_size];
 	word<T> curr;
-	curr.ptr = data;
+	curr.ptr = reinterpret_cast<T*>(data);
 	std::fill(new_data, new_data + new_size, 0);
 	curr.used = word<T>::MAX_BITS;
 	curr.available = word<T>::MAX_BITS - curr.used;
@@ -51,7 +52,7 @@ T* compressElement(int n_components, int bits_per_component_provided, int bits_p
 		if (i_write.available < bits_per_component_new)
 		{
 			unsigned long long mask_first = pow(2, i_write.available) - 1;
-			unsigned long long mask_second = (unsigned long long )(pow(2, bits_per_component_new - i_write.available) - 1) << (i_write.available);
+			unsigned long long mask_second = (unsigned long long)(pow(2, bits_per_component_new - i_write.available) - 1) << (i_write.available);
 			T maskedb = maskedshiftedb & mask_first;
 			T reshiftedb = maskedb << shift_new;
 			*i_write.ptr = *i_write.ptr | reshiftedb;
@@ -112,52 +113,55 @@ void printData(int n, int m, T* data)
 int main()
 {
 	byte data[] = {
-		0x0B, 0x0D, 0x0F,
-		0x0A, 0x0B, 0x0C,
-		0x0D, 0x0E, 0x0F
+		0x01, 0x02, 0x03, 
+		0x04, 0x05, 0x06,
+		0x07, 0x08, 0x09
 	};
 
-	byte compressedData[6];
-	byte fullyCompressedData[6];
-	byte decompressedData[9];
+	constexpr int n_elements = 3;
+	constexpr int n_comp = 3;
 
-	int n_elements = 3;
-	int n_comp = 3;
-	int bits_pre = 8;
-	int bits_post = 4;
+	constexpr int bits_pre_comp = 8;
+	constexpr int bits_post_comp = 4;
+	constexpr int bits_pre_elem = n_comp * bits_pre_comp;
+	constexpr int bits_post_elem = n_comp * bits_post_comp;
 
+	constexpr int stride_pre = bits_pre_comp * n_comp + ((bits_pre_comp * n_comp) % 8);
+	constexpr int stride_post = bits_post_comp * n_comp + ((bits_post_comp * n_comp) % 8);
 
-	std::cout << "Initial data:\n";
-	printData(3, 3, data);
+	constexpr int elem_size = bits_post_elem / 8;
+	constexpr int element_has_padding = bits_post_elem % 8 != 0;
+	constexpr int elem_data_size = n_elements * elem_size + n_elements * element_has_padding;
 
-	for (int i = 0;i <= 2;i++)
+	byte compressedComp[n_elements * (stride_post / 8)];
+	byte compressedElem[elem_data_size];
+	byte new_data[n_elements * (bits_pre_elem / 8) + (bool) (bits_pre_elem % 8 != 0)];
+
+	std::cout << "Initial data: " << sizeof data << " bytes\n";
+	printData(n_elements, n_comp, data);
+	for (int i = 0;i <= n_elements - 1;i++)
 	{
-		int offset_pre = i * bits_pre *  n_comp;
-		int offset_post = i * 2 * 8;
-		if (i > 0)
-		{
-			offset_pre += offset_pre % 8;
-			offset_post += offset_post % 8;
-		}
+		int offset_pre = i * stride_pre;
+		int offset_post = i * stride_post;
 		offset_pre /= 8;
 		offset_post /= 8;
 
-		std::cout << (uintptr_t)data + offset_pre << " "
-			<< (uintptr_t)compressedData + offset_post << std::endl;
+		//std::cout << offset_post << " " << (uintptr_t)data + offset_pre << " " << (uintptr_t)compressedComp + offset_post << std::endl;
 
-		compressElement<byte>(n_comp, bits_pre, bits_post,
+		pack(n_comp, bits_pre_comp, bits_post_comp,
 			data + offset_pre,
-			compressedData + offset_post);
+			compressedComp + offset_post);
 	}
 
-	std::cout << "Compressed Data:\n";
-	printData(6, 1, compressedData);
+	std::cout << "Pack components: " << sizeof compressedComp << " bytes\n";
+	printData(n_elements, n_elements * stride_post / 8, compressedComp);
 
-	compressElement<int16_t>(3, 16, 12, reinterpret_cast<int16_t*>(compressedData), reinterpret_cast<int16_t*>(fullyCompressedData));
-	printData(5, 1, fullyCompressedData);
-	/*std::cout << "Decompressed data:\n";
-	unsigned char * uncompressed_data = compressElement(n_comp, bits_post, bits_pre, compressed_data);
-	for (int i = 0;i <= data_size_init - 1;i++) std::cout << hex(uncompressed_data[i]) << " ";
-	std::cout << std::endl;*/
+	pack(4, 16, 12, compressedComp, compressedElem);
 
+	std::cout << "Pack elements: " << sizeof compressedElem << " bytes\n";
+	printData(1, elem_data_size, compressedElem);
+
+	unpack(n_elements * n_comp, 4, 8, compressedElem, new_data);
+	std::cout << "Unpack: " << sizeof new_data << " bytes " << std::endl;
+	printData(n_elements, n_comp, new_data);
 }
