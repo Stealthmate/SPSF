@@ -15,9 +15,31 @@
 	#define SPSF_API
 #endif
 
+#include <memory>
+
 namespace SPSF
 {
+	const unsigned long long SPSF_HEADER_ULONG = *reinterpret_cast<const unsigned long long*>("SPSFONTS");
 
+	enum ColorType : int8_t
+	{
+		CT_NULL = 0,
+		GRAYSCALE = 1,
+		GRAYSCALE_ALPHA = 2,
+		RED_GREEN_BLUE = 3,
+		RED_GREEN_BLUE_ALPHA = 4
+	};
+
+	enum BitDepth : int8_t
+	{
+		BD_NULL = 0,
+		BD_1 = 1,
+		BD_2 = 2,
+		BD_4 = 4,
+		BD_8 = 8
+	};
+
+	typedef std::unique_ptr<char[]> owned_data;
 }
 
 #endif //SPSF_CONFIG_H

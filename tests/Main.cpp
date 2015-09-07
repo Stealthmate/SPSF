@@ -3,6 +3,71 @@
 #include <fstream>
 
 using namespace SPSF;
+std::string hex(unsigned char b);
+
+struct byte
+{
+	unsigned char *b;
+	int bits_available;
+	int bits_used;
+};
+unsigned char* compressElement(int n_components, int bits_per_component_provided, int bits_per_component_new, unsigned char* data)
+{
+	int new_size = std::ceil((n_components*  bits_per_component_new) / 8.0);
+	unsigned char* new_data = new unsigned char[new_size];
+	byte curr;
+	curr.b = data;
+	std::fill(new_data, new_data + new_size, 0);
+	curr.bits_used = 8;
+	curr.bits_available = 8 - curr.bits_used;
+
+	byte i_write;
+	i_write.b = new_data;
+	i_write.bits_used = 0;
+	i_write.bits_available = 8;
+	std::cout << (unsigned int)*new_data << std::endl;
+
+
+	unsigned int mask_prov = pow(2, bits_per_component_provided) - 1;
+	unsigned int mask_new = pow(2, bits_per_component_new) - 1;
+
+	for (int i = 0; i <= n_components - 1;i++)
+	{
+		if (curr.bits_available == 8)
+		{
+			curr.b++;
+			curr.bits_used = 8;
+			curr.bits_available = 8 - curr.bits_used;
+		}
+
+		if (i_write.bits_available == 0)
+		{
+			i_write.b++;
+			i_write.bits_available = 8;
+			i_write.bits_used = 0;
+		}
+
+		int shift_prov = curr.bits_available;
+		int shift_new = i_write.bits_used;
+
+		unsigned char shiftedb = *curr.b >> shift_prov;
+		unsigned char maskedshiftedb = (shiftedb & mask_prov) & mask_new;
+		unsigned char reshiftedb = maskedshiftedb << shift_new;
+		std::cout << hex(*curr.b) << " " << hex(shiftedb) << " " << hex(maskedshiftedb)  << " " << hex(reshiftedb) << std::endl;
+
+		//*i_write.b = *i_write.b | ((((*curr.b >> i * bits_per_component_provided) & bits_per_component_new) << i * bits_per_component_new));
+		std::cout << "Prefinal: " << hex(*i_write.b) << std::endl;
+		*i_write.b = *i_write.b | reshiftedb;
+		std::cout << "Final: " << hex(*i_write.b) << std::endl;
+		i_write.bits_used += bits_per_component_new;
+		i_write.bits_available = 8 - i_write.bits_used;
+
+		curr.bits_available += bits_per_component_provided;
+		curr.bits_used = 8 - curr.bits_available;
+	}
+
+	return new_data;
+}
 
 char hexarr[] = {
 	'0', '1', '2', '3', '4',
@@ -10,10 +75,10 @@ char hexarr[] = {
 	'A', 'B', 'C', 'D', 'E', 'F'
 };
 
-std::string hex(char b)
+std::string hex(unsigned char b)
 {
-	unsigned char ub = static_cast<unsigned char>(b);
-	std::string sb = "";
+	unsigned char ub = b;
+	std::string sb = "0x";
 	sb += hexarr[ub / 16];
 	sb += hexarr[ub % 16];
 	return  sb;
@@ -21,63 +86,8 @@ std::string hex(char b)
 
 int main()
 {
-	std::unique_ptr<char[]> data = std::make_unique<char[]>(256);
-	for (int i = 0;i <= 255;i++)
-	{
-		data[i] = i*3;
-	}
-
-	SPSF_Item item(std::move(data), 256);
-	std::vector<SPSF_Item> items;
-	items.push_back(item);
-
-	SPSF_Lane lane(ColorType::RED_GREEN_BLUE_ALPHA, BitDepth::BD_8, 8, 8, std::move(items));
-
-	std::vector<SPSF_Lane> lanes;
-	lanes.push_back(lane);
-
-	SPSF_Object obj(std::move(lanes));
-
-	std::ofstream ofs("SPSF.bin", std::ios::binary | std::ios::trunc);
-
-	if (ofs.is_open())
-	{
-		ofs << obj;
-	}
-	
-	SPSF_Object obj_read;
-
-	std::ifstream ifs("SPSF.bin", std::ios::in | std::ios::binary);
-	if (ifs.is_open()) ifs >> obj_read;
-	std::cout << "Read:"
-		<< "\nTotal Size: " << obj_read.getTotalSize()
-		<< "\nNumber of lanes: " << obj_read.getN_Lanes() << std::endl;
-
-	auto lanes_read = obj_read.getLanes();
-	for (int i = 0;i <= obj_read.getN_Lanes() - 1;i++)
-	{
-		std::cout
-			<< "\n\tLane: " << i + 1
-			<< "\n\tColor Type: " << lanes_read[i].getColorType()
-			<< "\n\tBitDepth: " << lanes_read[i].getBitDepth()
-			<< "\n\tItem Width: " << lanes_read[i].getItemWidth()
-			<< "\n\tItem Height: " << lanes_read[i].getItemHeight()
-			<< "\n\tItem Size: " << lanes_read[i].getItemSize()
-			<< "\n\tNumber of Items: " << lanes_read[i].getN_Items();
-
-		auto items_read = lanes_read[i].getItems();
-		for (int j = 0;j <= lanes_read[i].getN_Items() - 1;j++)
-		{
-			std::cout << "\n\t\tItem: " << j + 1;
-			std::cout << "\n\t\t\t";
-			auto item_read = &items_read[j];
-			for (int k = 0; k <= lanes_read[i].getItemSize() - 1;k++)
-			{
-				std::cout << hex(item.arr()[k]) << " ";
-			}
-		}
-
-
-	}
+	unsigned char data[] = {0x03, 0x02, 0x01, 0x02};
+	unsigned char * compressed_data = compressElement(4, 8, 3, data);
+	std::cout << hex(*compressed_data) << std::endl;
 
 }
