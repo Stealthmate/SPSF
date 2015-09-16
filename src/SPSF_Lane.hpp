@@ -15,7 +15,7 @@ namespace SPSF
 	public:
 
 		static SPSF_API SPSF_Lane createLaneFromData(
-			owned_data data,
+			byte* data,
 
 			int16_t item_width,
 			int16_t item_height,

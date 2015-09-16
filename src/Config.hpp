@@ -50,7 +50,7 @@ namespace SPSF
 
 	typedef uint8_t byte;
 	typedef uint32_t dword;
-	typedef std::unique_ptr<byte> owned_data;
+	typedef std::unique_ptr<byte[]> owned_data;
 }
 
 #endif //SPSF_CONFIG_H

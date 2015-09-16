@@ -96,7 +96,7 @@ template<typename T> byte* actual_repack(int n_elements, int element_input_size_
 	return reinterpret_cast<byte*>(new_data);
 }
 
-byte* repack(int n_elements, int element_input_size, int element_output_size, byte* input_data, byte* output_data)
+byte* SPSF::repack(int n_elements, int element_input_size, int element_output_size, byte* input_data, byte* output_data)
 {
 	int size = std::max(element_input_size, element_output_size);
 	if (size <= 8) return actual_repack<uint8_t>(n_elements, element_input_size, element_output_size, input_data, output_data);

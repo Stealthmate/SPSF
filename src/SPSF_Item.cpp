@@ -7,9 +7,9 @@ SPSF_Item::SPSF_Item() : data()
 	size = 0;
 }
 
-SPSF_Item::SPSF_Item(std::unique_ptr<byte> data, size_t size)
+SPSF_Item::SPSF_Item(byte* data, size_t size)
 {
-	this->data = std::move(data);
+	this->data = data;
 	this->size = size;
 }
 
@@ -20,7 +20,7 @@ SPSF_Item::SPSF_Item(const SPSF_Item &item)
 	{
 		try
 		{
-			data = std::make_unique<byte>(size);
+			data = new byte[size];
 		}
 		catch (std::bad_alloc ba)
 		{
@@ -28,7 +28,7 @@ SPSF_Item::SPSF_Item(const SPSF_Item &item)
 		}
 		for (int i = 0;i <= size - 1;i++)
 		{
-			data.get()[i] = item.data.get()[i];
+			data[i] = item.data[i];
 		}
 	}
 }
@@ -48,8 +48,8 @@ SPSF_Item& SPSF_Item::operator=(const SPSF_Item &item)
 			throw std::exception("Could not allocate memory for copy assignment");
 		}
 	}
-	data.reset();
-	data = std::move(_copy);
+	delete [] data;
+	data = _copy.get();
 	return *this;
 }
 
@@ -65,27 +65,27 @@ size_t SPSF_Item::getSizeInBytes() const
 
 const byte* SPSF_Item::getData() const
 {
-	return data.get();
+	return data;
 }
 
 byte* SPSF_Item::getData()
 {
-	return data.get();
+	return data;
 }
 
 std::istream& SPSF::operator>>(std::istream &in, SPSF_Item &item)
 {
 	if (!in.good()) throw std::exception("SPSF: Stream state is not good!\n");
-	item.data = std::make_unique<byte>(item.size);
+	item.data = new byte[item.size];
 	std::cout << "Size of item " << item.size << std::endl;
-	in.read(reinterpret_cast<char*>(item.data.get()), item.size);
+	in.read(reinterpret_cast<char*>(item.data), item.size);
 	return in;
 }
 
 std::ostream& SPSF::operator<<(std::ostream &out, const SPSF_Item &item)
 {
 	if (!out.good()) throw std::exception("SPSF: Stream state is not good!\n");
-	out.write(reinterpret_cast<char*>(item.data.get()), item.getSizeInBytes());
+	out.write(reinterpret_cast<char*>(item.data), item.getSizeInBytes());
 	out.flush();
 	return out;
 }

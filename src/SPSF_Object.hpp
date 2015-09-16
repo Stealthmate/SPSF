@@ -15,7 +15,7 @@ namespace SPSF
 	public:
 
 		static SPSF_API SPSF_Object createObjectFromData(
-			owned_data data,
+			byte* data,
 
 			int32_t n_lanes,
 			int32_t *n_items,

@@ -14,7 +14,7 @@ namespace SPSF
 	public:
 
 		static SPSF_API SPSF_Item pack(
-			owned_data data,
+			byte* data,
 			int32_t n_elements,
 			int8_t element_size_bits_internal,
 			int8_t element_size_bits_provided
@@ -30,7 +30,7 @@ namespace SPSF
 
 		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
 
-		owned_data data;
+		byte* data;
 		int32_t n_elements;
 		size_t size;
 
@@ -38,7 +38,7 @@ namespace SPSF
 
 		SPSF_API SPSF_Item();
 
-		SPSF_API SPSF_Item(owned_data data, size_t size);
+		SPSF_API SPSF_Item(byte* data, size_t size);
 
 		SPSF_API SPSF_Item(const SPSF_Item &item);
 		SPSF_Item(SPSF_Item &&item) = default;

@@ -1,6 +1,45 @@
 #include "SPSF_Lane.hpp"
-
+#include "Packers.hpp"
 using namespace SPSF;
+
+SPSF_Lane SPSF_Lane::createLaneFromData(
+	byte* data,
+	int16_t item_width,
+	int16_t item_height,
+	int32_t n_items,
+	ColorType ct_internal,
+	BitDepth bd_internal,
+	ColorType ct_provided,
+	BitDepth bd_provided
+	)
+{
+
+	size_t itemsize = std::ceil(item_width * item_height * ct_internal * bd_internal / (double)(sizeof int32_t * 8));
+
+	byte* new_data = new byte[n_items * itemsize];
+
+	repack(item_width*item_height*n_items,
+		ct_provided * bd_provided,
+		ct_internal * bd_internal,
+		data);
+
+	SPSF_Lane lane;
+	lane.items.resize(n_items);
+
+	lane.ct = ct_internal;
+	lane.bd = bd_internal;
+	lane.n_Items = n_items;
+	lane.item_width = item_width;
+	lane.item_height = item_height;
+
+
+	for (int i = 0;i <= n_items - 1;i++)
+	{
+		lane.items[i].data = new_data + i * itemsize;
+	}
+
+	return lane;
+}
 
 SPSF_Lane::SPSF_Lane() : items()
 {
