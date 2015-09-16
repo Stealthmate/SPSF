@@ -30,6 +30,7 @@ namespace SPSF
 		RED_GREEN_BLUE_ALPHA = 4
 	};
 
+	///Bits per channel
 	enum BitDepth : int8_t
 	{
 		BD_NULL = 0,

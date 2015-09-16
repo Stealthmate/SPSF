@@ -13,11 +13,14 @@ namespace SPSF
 	{
 	public:
 
-		static SPSF_API SPSF_Item pack(
+		static SPSF_API SPSF_Item createItemFromData(
 			byte* data,
 			int32_t n_elements,
-			int8_t element_size_bits_internal,
-			int8_t element_size_bits_provided
+			BitDepth bd_internal,
+			BitDepth bd_provided,
+			ColorType ct_internal,
+			ColorType ct_provided,
+			std::unique_ptr<byte> buffer
 			);
 
 	private:
@@ -30,7 +33,7 @@ namespace SPSF
 
 		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
 
-		byte* data;
+		std::unique_ptr<byte> data;
 		int32_t n_elements;
 		size_t size;
 

@@ -1,6 +1,39 @@
 #include "SPSF_Item.hpp"
+#include "Packers.hpp"
 
 using namespace SPSF;
+
+SPSF_Item SPSF_Item::createItemFromData(
+	byte* data,
+	int32_t n_elements,
+	BitDepth bd_internal,
+	BitDepth bd_provided,
+	ColorType ct_internal,
+	ColorType ct_provided,
+	std::unique_ptr<byte> buffer
+	)
+{
+	SPSF_Item item;
+	item.data = std::move(buffer);
+	item.size = std::ceil(n_elements * ct_internal * bd_internal / 8.0);
+	int32_t element_stride_internal = std::ceil(ct_internal * bd_internal / 8.0);
+	int32_t element_stride_provided = std::ceil(ct_provided * bd_provided / 8.0);
+
+	std::unique_ptr<byte> temp_pack_buffer = std::make_unique<byte>(item.size);
+
+	for (int i = 0;i <= n_elements - 1;i++)
+	{
+		repack(ct_provided, 
+			bd_provided, 
+			bd_internal, 
+			data + (byte)(i * std::ceil(bd_provided/8.0)), 
+			temp_pack_buffer.get() + (byte)(i * std::ceil(bd_internal/8.0)));
+	}
+
+	repack(n_elements, ct_provided * bd_provided, ct_internal * bd_internal, temp_pack_buffer.get(), item.data.get());
+
+	return item;
+}
 
 SPSF_Item::SPSF_Item() : data()
 {
