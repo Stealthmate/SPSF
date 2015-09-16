@@ -4,9 +4,11 @@ using namespace SPSF;
 
 SPSF_Lane SPSF_Lane::createLaneFromData(
 	byte** data,
+
 	int16_t item_width,
 	int16_t item_height,
 	int32_t n_items,
+	
 	ColorType ct_internal,
 	BitDepth bd_internal,
 	ColorType ct_provided,
@@ -25,14 +27,25 @@ SPSF_Lane SPSF_Lane::createLaneFromData(
 	lane.n_Items = n_items;
 	lane.item_width = item_width;
 	lane.item_height = item_height;
+	std::cout << "Creating lane\n" << "Color Type " << ct_internal
+		<< "\nBit Depth " << bd_internal
+		<< "\nn_Items " << n_items
+		<< "\nWidth " << item_width
+		<< "\nHeight " << item_height << std::endl;
 
-	for (int i = 0;i <= n_items;i++)
+	int pixel_size_bits_provided = ct_provided * bd_provided;
+	int item_size_provided = std::ceil((pixel_size_bits_provided * item_width * item_height) / 8.0);
+
+	int pixel_size_bits_internal = ct_internal * bd_internal;
+	int item_size_internal = std::ceil((pixel_size_bits_provided * item_width * item_height) / 8.0);
+
+	lane.data = std::make_unique<byte[]>(item_size_internal * n_items);
+
+	for (int i = 0;i <= n_items - 1;i++)
 	{
-		repack(item_width*item_height*n_items,
-			ct_provided * bd_provided,
-			ct_internal * bd_internal,
-			data[i], new_data.get());
-		lane.items.push_back(createItemFromData);
+		lane.items.push_back(
+			SPSF_Item::createItemFromData(data[i], item_width * item_height, bd_internal, bd_provided,
+				ct_internal, ct_provided, lane.data.get() + (i * item_size_internal)));
 	}
 
 	return lane;

@@ -15,7 +15,7 @@ namespace SPSF
 	public:
 
 		static SPSF_API SPSF_Lane createLaneFromData(
-			byte* data,
+			byte** data,
 
 			int16_t item_width,
 			int16_t item_height,
@@ -42,7 +42,10 @@ namespace SPSF
 
 		int32_t n_Items;
 
+		std::unique_ptr<byte[]> data;
+
 		std::vector<SPSF_Item> items;
+
 
 	public:
 

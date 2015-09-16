@@ -19,11 +19,20 @@ SPSF_Object SPSF_Object::createObjectFromData(
 {
 	SPSF_Object spsfobj;
 	spsfobj.n_Lanes = n_lanes;
-	std::vector<SPSF_Lane> lanes;
 	for (int i = 0;i <= n_lanes - 1;i++)
 	{
-		lanes.push_back(createLaneFromData());
+		spsfobj.lanes.push_back(std::move(
+			SPSF_Lane::createLaneFromData(
+				data[i],
+				item_widths[i], item_heights[i], 
+				n_items[i],
+				color_types_internal[i],
+				bit_depths_internal[i],
+				color_types_provided[i],
+				bit_depths_provided[i])));
 	}
+
+	return spsfobj;
 }
 
 SPSF_Object::SPSF_Object() : lanes()
@@ -35,11 +44,11 @@ SPSF_Object::SPSF_Object() : lanes()
 SPSF_Object::SPSF_Object(std::vector<SPSF_Lane> &&lanes)
 {
 	this->n_Lanes = lanes.size();
-	this->lanes = lanes;
+	this->lanes = std::move(lanes);
 	size_t total = sizeof SPSF_HEADER_ULONG + +sizeof total_size + sizeof n_Lanes;
 	for (int i = 0;i <= n_Lanes - 1;i++)
 	{
-		total += this->lanes[i].getSize();
+		total += this->lanes[i].getSizeInBytes();
 	}
 	this->total_size = total;
 }

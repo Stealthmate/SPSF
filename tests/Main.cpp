@@ -1,6 +1,7 @@
-#include "../src/SPSF.hpp"
+#include "../src/SPSF_Object.hpp"
 #include "../src/Packers.hpp"
 #include <iostream>
+#include <string>
 #include <fstream>
 
 using namespace SPSF;
@@ -36,7 +37,7 @@ void printData(int n, int m, T* data)
 }
 
 int main()
-{
+{/*
 	byte data[] = {
 		0x01, 0x02, 0x03, 
 		0x04, 0x05, 0x06,
@@ -88,5 +89,27 @@ int main()
 
 	unpack(n_elements * n_comp, 4, 8, compressedElem, new_data);
 	std::cout << "Unpack: " << sizeof new_data << " bytes " << std::endl;
-	printData(n_elements, n_comp, new_data);
+	printData(n_elements, n_comp, new_data);*/
+
+	byte data[] = {
+		0x01, 0x02, 0x03,
+		0x04, 0x05, 0x06,
+		0x07, 0x08, 0x09
+	};
+
+	byte* items[] = {data};
+	byte** lanes[] = { items };
+	int n_items = 1;
+	short w = 1;
+	short h = 3;
+	ColorType ct_p = RED_GREEN_BLUE;
+	BitDepth bd_p = BD_8;
+	ColorType ct_i = RED_GREEN_BLUE;
+	BitDepth bd_i = BD_4;
+	SPSF_Object obj = SPSF_Object::createObjectFromData(lanes, 1, &n_items, &w, &h, &ct_i, &bd_i, &ct_p, &bd_p);
+
+
+	std::cout << obj.getLanes().size() << " lanes" << std::endl;
+	auto ptr = obj.getLanes()[0].getItems()[0].getData();
+	std::cout << hex(ptr[0]) << " " << hex(ptr[1]) << " " << hex(ptr[2]) << " " << hex(ptr[3]) << " " << hex(ptr[4]) << std::endl;
 }

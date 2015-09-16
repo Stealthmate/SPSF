@@ -20,7 +20,7 @@ namespace SPSF
 			BitDepth bd_provided,
 			ColorType ct_internal,
 			ColorType ct_provided,
-			std::unique_ptr<byte> buffer
+			byte* buffer
 			);
 
 	private:
@@ -33,7 +33,7 @@ namespace SPSF
 
 		friend SPSF_API std::istream& operator>>(std::istream &in, SPSF_Lane &lane);
 
-		std::unique_ptr<byte> data;
+		byte* data;
 		int32_t n_elements;
 		size_t size;
 
